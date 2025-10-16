@@ -9,7 +9,8 @@ import java.io.PrintWriter;
 
 public class Main {
     private static final String MSG_ERROR = "Error en la ejecucion del proceso";
-    private static final String[] COMANDOS = {"grep", "-i", "psp"};
+    private static final String PARAMETRO = "psp";
+    private static final String[] COMANDOS = {"grep", "-i"};
     private static final String[] FRASES = {"Me gusta PSP y java", 
                                             "PSP se programa en java", 
                                             "es un modulo de DAM", 
@@ -17,9 +18,9 @@ public class Main {
                                             "PSP es programacion"};
 
     public static void main(String[] args) throws IOException {
-        Process process = Runtime.getRuntime().exec(COMANDOS);
-        writeOnPrcess(process);
-        String salida = inputProcess(process);
+        Process process = Runtime.getRuntime().exec(obtenerComandoFinal(COMANDOS, PARAMETRO));
+        escribir(process, FRASES);
+        String salida = obtenerSalida(process);
 
         int exitVal = process.exitValue();
         if(exitVal == 0)
@@ -32,25 +33,31 @@ public class Main {
         }
     }
 
-    public static void writeOnPrcess(Process process) throws  IOException{
+    public static void escribir(Process process, String[] frases) throws  IOException{
         OutputStream out = process.getOutputStream();
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(out));
-        for(String frase : FRASES)
-        {
-            writer.println(frase);
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(out))) {
+            for(String frase : frases)
+            {
+                writer.println(frase);
+            }
+            writer.close();
         }
-        writer.close();
     }
 
-    public static String inputProcess(Process process) throws IOException{
+    public static String obtenerSalida(Process process) throws IOException{
         String ret = "";
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String linea;
-        while((linea = reader.readLine()) != null)
-        {
-            ret += linea + "\n";
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String linea;
+            while((linea = reader.readLine()) != null)
+            {
+                ret += linea + "\n";
+            }
         }
-        reader.close();
+        return ret;
+    }
+
+    public static String[] obtenerComandoFinal(String[] comando, String param){
+        String[] ret = {comando[0], comando[1], param};
         return ret;
     }
 }
